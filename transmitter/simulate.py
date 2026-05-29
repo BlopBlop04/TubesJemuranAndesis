@@ -2,7 +2,7 @@ import requests
 import time
 import sys
 
-URL = "http://127.0.0.1:5000/api/update"
+URL = "https://tubes-jemuran-andesis.vercel.app/api/update"
 
 SIMULATION_STATES = [
     # (status_cuaca, kondisi_jemuran, warna, peringatan, durasi_detik)

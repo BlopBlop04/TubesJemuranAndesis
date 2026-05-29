@@ -5,7 +5,7 @@ import time
 import sys
 
 # Konfigurasi Default
-DEFAULT_URL = "http://127.0.0.1:5000/api/update"
+DEFAULT_URL = "https://tubes-jemuran-andesis.vercel.app/api/update"
 BAUDRATE = 9600
 
 def list_serial_ports():
