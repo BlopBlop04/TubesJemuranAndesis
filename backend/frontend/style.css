@@ -1,0 +1,837 @@
+/* ==========================================================================
+   CSS UNTUK SISTEM MONITORING JEMURAN
+   Gaya: Modern Dark Mode, Glassmorphism, & Animasi Cuaca Dinamis
+   ========================================================================== */
+
+:root {
+    --bg-dark: #090d16;
+    --card-bg: rgba(17, 25, 40, 0.65);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    /* Harmonious Status Colors */
+    --color-red: #ef4444;
+    --color-red-glow: rgba(239, 68, 68, 0.25);
+    --color-yellow: #eab308;
+    --color-yellow-glow: rgba(234, 179, 8, 0.25);
+    --color-green: #22c55e;
+    --color-green-glow: rgba(34, 197, 94, 0.25);
+    --color-gray: #64748b;
+    --color-gray-glow: rgba(100, 116, 139, 0.15);
+    
+    /* Fonts */
+    --font-display: 'Outfit', 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* ==========================================================================
+   DYNAMIC BACKGROUND OVERLAYS (CUACA)
+   ========================================================================== */
+
+.weather-background-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -10;
+    transition: background 1.5s ease-in-out;
+}
+
+/* Background Gradients berdasarkan cuaca */
+body.weather-cerah .weather-background-overlay {
+    background: radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.2) 0%, rgba(9, 13, 22, 1) 70%);
+}
+
+body.weather-gerimis .weather-background-overlay {
+    background: radial-gradient(circle at 50% -20%, rgba(148, 163, 184, 0.2) 0%, rgba(9, 13, 22, 1) 80%);
+}
+
+body.weather-hujan .weather-background-overlay {
+    background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.25) 0%, rgba(9, 13, 22, 1) 85%);
+}
+
+body.weather-none .weather-background-overlay {
+    background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.2) 0%, rgba(9, 13, 22, 1) 100%);
+}
+
+/* Animasi Partikel Hujan */
+.rain-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -9;
+    pointer-events: none;
+    display: none;
+}
+
+body.weather-hujan .rain-container {
+    display: block;
+}
+
+.rain-drop {
+    position: absolute;
+    background: linear-gradient(transparent, rgba(156, 163, 175, 0.6));
+    width: 1px;
+    height: 60px;
+    opacity: 0.7;
+    animation: fall linear infinite;
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-80px) rotate(15deg);
+    }
+    100% {
+        transform: translateY(100vh) rotate(15deg);
+    }
+}
+
+/* Animasi Kabut/Gerimis */
+.mist-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -9;
+    pointer-events: none;
+    display: none;
+    opacity: 0.4;
+}
+
+body.weather-gerimis .mist-container {
+    display: block;
+}
+
+.mist-cloud {
+    position: absolute;
+    background: radial-gradient(circle, rgba(203, 213, 225, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: drift linear infinite;
+}
+
+@keyframes drift {
+    0% {
+        transform: translateX(-200px) translateY(100px);
+    }
+    50% {
+        transform: translateX(50vw) translateY(50px);
+    }
+    100% {
+        transform: translateX(100vw) translateY(100px);
+    }
+}
+
+/* Efek Glow Matahari Cerah */
+.sunny-glow {
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+    z-index: -9;
+    pointer-events: none;
+    display: none;
+    animation: pulseGlow 8s ease-in-out infinite alternate;
+}
+
+body.weather-cerah .sunny-glow {
+    display: block;
+}
+
+@keyframes pulseGlow {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+/* ==========================================================================
+   APP LAYOUT CONTAINER
+   ========================================================================== */
+
+.app-container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 2.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+/* ==========================================================================
+   HEADER
+   ========================================================================== */
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icon-logo {
+    width: 2.8rem;
+    height: 2.8rem;
+    color: var(--color-yellow);
+    filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4));
+    animation: rotateLogo 20s linear infinite;
+}
+
+@keyframes rotateLogo {
+    100% { transform: rotate(360deg); }
+}
+
+.header-text h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: -0.025em;
+    background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-text .subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* Badge Koneksi */
+.status-connection-badge {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+.status-connection-badge.connected {
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.status-connection-badge.connected .pulse-dot {
+    background-color: var(--color-green);
+    box-shadow: 0 0 8px var(--color-green);
+}
+
+.status-connection-badge.disconnected {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.status-connection-badge.disconnected .pulse-dot {
+    background-color: var(--color-red);
+    box-shadow: 0 0 8px var(--color-red);
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--color-yellow);
+    border-radius: 50%;
+    animation: pulseBadge 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseBadge {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* ==========================================================================
+   ALERT BANNER (RAIN ALERT)
+   ========================================================================== */
+
+.alert-banner {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.1) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    animation: slideDown 0.4s ease-out;
+    box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.2);
+}
+
+@keyframes slideDown {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: #fca5a5;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.alert-icon {
+    width: 1.4rem;
+    height: 1.4rem;
+    color: var(--color-red);
+    animation: flashAlert 1.2s infinite;
+}
+
+@keyframes flashAlert {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.05); }
+}
+
+.btn-dismiss {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-dismiss:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ==========================================================================
+   CARDS DASHBOARD
+   ========================================================================== */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.75rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Efek Glow di dalam card */
+.card-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.card-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.card-category {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.075em;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.card-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+/* ==========================================================================
+   DASHBOARD CARD CONTENT SPECIFICS
+   ========================================================================== */
+
+/* Layout Sensor Display */
+.weather-display, .laundry-display {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: auto;
+}
+
+.weather-icon-wrapper, .laundry-icon-wrapper {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.5s ease;
+}
+
+.weather-icon, .laundry-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    transition: all 0.5s ease;
+}
+
+.weather-info, .laundry-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+/* Status Badges */
+.badge {
+    align-self: flex-start;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.badge-red {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.badge-yellow {
+    background-color: rgba(234, 179, 8, 0.15);
+    color: #fef08a;
+    border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.badge-green {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #bbf7d0;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.badge-gray {
+    background-color: rgba(100, 116, 139, 0.15);
+    color: #cbd5e1;
+    border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+/* Card Value Text */
+.weather-value, .laundry-value {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+}
+
+/* Dynamic State Styling for Cards */
+/* HUJAN */
+.card-hujan {
+    border-color: rgba(239, 68, 68, 0.25);
+    box-shadow: 0 10px 30px -10px var(--color-red-glow);
+}
+.card-hujan .weather-icon-wrapper {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+.card-hujan .weather-icon {
+    color: var(--color-red);
+    filter: drop-shadow(0 0 6px var(--color-red-glow));
+    animation: rainShake 0.5s infinite alternate;
+}
+@keyframes rainShake {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-3px); }
+}
+
+/* GERIMIS */
+.card-gerimis {
+    border-color: rgba(234, 179, 8, 0.25);
+    box-shadow: 0 10px 30px -10px var(--color-yellow-glow);
+}
+.card-gerimis .weather-icon-wrapper {
+    background: rgba(234, 179, 8, 0.08);
+    border-color: rgba(234, 179, 8, 0.2);
+}
+.card-gerimis .weather-icon {
+    color: var(--color-yellow);
+    filter: drop-shadow(0 0 6px var(--color-yellow-glow));
+}
+
+/* CERAH */
+.card-cerah {
+    border-color: rgba(34, 197, 94, 0.25);
+    box-shadow: 0 10px 30px -10px var(--color-green-glow);
+}
+.card-cerah .weather-icon-wrapper {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.2);
+}
+.card-cerah .weather-icon {
+    color: var(--color-green);
+    filter: drop-shadow(0 0 6px var(--color-green-glow));
+    animation: spinSlow 12s linear infinite;
+}
+@keyframes spinSlow {
+    100% { transform: rotate(360deg); }
+}
+
+/* Laundry Wet State */
+.card-laundry-danger {
+    border-color: rgba(239, 68, 68, 0.25);
+    box-shadow: 0 10px 30px -10px var(--color-red-glow);
+}
+.card-laundry-danger .laundry-icon-wrapper {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+    animation: swingHanger 1s infinite ease-in-out alternate;
+}
+.card-laundry-danger .laundry-icon {
+    color: var(--color-red);
+    filter: drop-shadow(0 0 6px var(--color-red-glow));
+}
+@keyframes swingHanger {
+    0% { transform: rotate(-5deg); }
+    100% { transform: rotate(5deg); }
+}
+
+/* Laundry Safe State */
+.card-laundry-safe {
+    border-color: rgba(34, 197, 94, 0.25);
+}
+.card-laundry-safe .laundry-icon-wrapper {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.2);
+}
+.card-laundry-safe .laundry-icon {
+    color: var(--color-green);
+}
+
+/* ==========================================================================
+   SYSTEM CONTROL CARD SPECIFICS
+   ========================================================================== */
+
+.system-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: auto;
+}
+
+.control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Toggle Alarm Button */
+.btn-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.icon-sound {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+/* Status Muted / Off */
+.btn-toggle.sound-off {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+}
+
+.btn-toggle.sound-off:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+}
+
+/* Status Alarm Active */
+.btn-toggle.sound-on {
+    background-color: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.25);
+    color: #4ade80;
+    box-shadow: 0 4px 15px -3px rgba(34, 197, 94, 0.2);
+}
+
+.btn-toggle.sound-on:hover {
+    background-color: rgba(34, 197, 94, 0.2);
+}
+
+/* Status Alarm Beralarm (Hujan + On) */
+.btn-toggle.sound-alarm {
+    background-color: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    box-shadow: 0 4px 15px -3px rgba(239, 68, 68, 0.3);
+    animation: buttonPulse 1s infinite alternate;
+}
+
+@keyframes buttonPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.02); }
+}
+
+.divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.05);
+    width: 100%;
+}
+
+.meta-info {
+    gap: 0.5rem;
+}
+
+.meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+}
+
+.meta-label {
+    color: var(--text-muted);
+}
+
+.meta-val {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.text-success {
+    color: var(--color-green) !important;
+}
+
+.text-danger {
+    color: var(--color-red) !important;
+}
+
+/* ==========================================================================
+   RIWAYAT CUACA SECTION (HISTORY)
+   ========================================================================== */
+
+.history-section {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.section-header p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Tabel Kustom */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.85rem;
+}
+
+.history-table th {
+    background-color: rgba(15, 23, 42, 0.4);
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.history-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+}
+
+.history-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table tbody tr:hover td {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.table-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2.5rem 1.25rem !important;
+}
+
+/* Badge Kecil di Tabel */
+.table-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.table-badge-red {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+
+.table-badge-yellow {
+    background-color: rgba(234, 179, 8, 0.15);
+    color: #fef08a;
+}
+
+.table-badge-green {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #bbf7d0;
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+.app-footer {
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   RESPONSIVENESS MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 640px) {
+    .app-container {
+        padding: 1.5rem 1rem;
+        gap: 1.5rem;
+    }
+    
+    .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+        padding-bottom: 1rem;
+    }
+    
+    .status-connection-badge {
+        align-self: stretch;
+        justify-content: center;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    
+    .card {
+        padding: 1.5rem;
+    }
+    
+    .weather-display, .laundry-display {
+        gap: 1rem;
+    }
+    
+    .history-section {
+        padding: 1.5rem;
+    }
+}
