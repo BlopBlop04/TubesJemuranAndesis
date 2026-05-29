@@ -1,3 +1,5 @@
 flask
 pyserial
 requests
+psycopg2-binary
+python-dotenv
