@@ -114,6 +114,66 @@ def get_history():
         history = []
     return jsonify(history)
 
+@app.route('/api/debug', methods=['GET'])
+def debug_db():
+    """Endpoint diagnostik untuk memeriksa koneksi database."""
+    info = {}
+    try:
+        db_url = os.environ.get('DATABASE_URL')
+        info['has_db_url'] = db_url is not None
+        if db_url:
+            # Sembunyikan password demi keamanan
+            # Format umum: postgresql://username:password@host:port/database
+            parts = db_url.split('@')
+            if len(parts) > 1:
+                prefix = parts[0].split(':')
+                if len(prefix) > 2:
+                    prefix[2] = '***'
+                info['db_url_masked'] = ':'.join(prefix) + '@' + parts[1]
+            else:
+                info['db_url_masked'] = 'format URL tidak valid'
+        
+        # Uji koneksi
+        conn, is_postgres = database.get_connection()
+        info['is_postgres'] = is_postgres
+        cursor = conn.cursor()
+        
+        # Jalankan test query
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        info['test_query_select_1'] = 'SUKSES'
+        
+        # Cek daftar tabel
+        if is_postgres:
+            cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+        else:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            
+        tables = [r[0] for r in cursor.fetchall()]
+        info['tables_found'] = tables
+        
+        # Cek jumlah data di tabel riwayat_jemuran
+        if 'riwayat_jemuran' in tables:
+            cursor.execute("SELECT COUNT(*) FROM riwayat_jemuran")
+            info['total_rows_in_riwayat'] = cursor.fetchone()[0]
+            
+            # Cek data terakhir
+            cursor.execute("SELECT * FROM riwayat_jemuran ORDER BY id DESC LIMIT 1")
+            row = cursor.fetchone()
+            info['latest_row'] = database.row_to_dict(cursor, row)
+        else:
+            info['total_rows_in_riwayat'] = 'Tabel riwayat_jemuran tidak ditemukan!'
+            
+        conn.close()
+        info['connection_status'] = 'SUKSES CONNECT KE DATABASE'
+    except Exception as e:
+        info['connection_status'] = 'GAGAL'
+        info['error_message'] = str(e)
+        import traceback
+        info['traceback'] = traceback.format_exc()
+        
+    return jsonify(info)
+
 # Untuk dijalankan lokal menggunakan python api/index.py
 if __name__ == '__main__':
     database.init_db()
